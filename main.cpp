@@ -5,7 +5,7 @@
 
 using namespace std;
 const string SERVICE_WORDS[] = {"dim", "integer", "real", "boolean", "ass", "if", "then", "else", "for", "to", "do", "while", "read", "write", "or", "and", "not", "true", "false"};
-const string SEPARATORS[] = {"<>", "=", "<", "<=", ">", ">=", "+", "-", "*", "/", "{", ";", "}", ",", ":", "\n", ".", "(", ")", " "};
+const string SEPARATORS[] = {"<>", "=", "<", "<=", ">", ">=", "+", "-", "*", "/", "{", ";", "}", ",", ":", "\n", ".", "(", ")"};
 const string ALPHAS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_";
 const string NUMBERS = "012345689";
 vector<string> variables = {};
@@ -66,6 +66,12 @@ bool add_number(string number){
     return true;
 }
 
+void add_variable(string variable){
+    cout << "3 " << variable << endl;
+    variables.push_back(variable);
+    lexems.push_back({3, variables.size() - 1});
+}
+
 int main(int argc, char *argv[])
 {
     if (argc < 2){
@@ -95,45 +101,34 @@ int main(int argc, char *argv[])
             if (temp == "*/"){
                 comment = false;
                 temp = "";
+                flag = 0;
             }
             continue;
         }
-        if (symbol == '\t') symbol = ' ';
+        if (symbol == ' ' or symbol == '\t'){
+            if (flag == 1) add_variable(temp);
+            else if (flag == 2) add_seperator(temp);
+            else if (flag == 3) add_number(temp);
+            temp = "";
+            flag = 0;
+            continue;
+        }
         if (is_alpha(symbol) or (is_number(symbol) and flag == 1)){
-            if (flag == 2){
-                add_seperator(temp);
-                temp = "";
-            }
-            else if (flag == 3){
-                add_number(temp);
-                temp = "";
-            }
+            if (flag == 2) add_seperator(temp);
+            else if (flag == 3) add_number(temp);
+            if (flag != 1) temp = "";
             flag = 1;
         }
         else if (is_number(symbol)){
-            if (flag == 2){
-                add_seperator(temp);
-                temp = "";
-            }
-            else if (flag == 1){
-                cout << "3 " << temp << endl;
-                variables.push_back(temp);
-                lexems.push_back({3, variables.size() - 1});
-                temp = "";
-            }
+            if (flag == 2) add_seperator(temp);
+            else if (flag == 1) add_variable(temp);
+            if (flag != 3) temp = "";
             flag = 3;
         }
         else {
-            if (flag == 1){
-                cout << "3 " << temp << endl;
-                variables.push_back(temp);
-                lexems.push_back({3, variables.size() - 1});
-                temp = "";
-            }
-            else if (flag == 3){
-                add_number(temp);
-                temp = "";
-            }
+            if (flag == 1) add_variable(temp);
+            else if (flag == 3) add_number(temp);
+            if (flag != 2) temp = "";
             flag = 2;
         }
         temp += symbol;
@@ -148,17 +143,11 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        if (flag == 2){
+        if (flag == 2 and temp.length() == 2){
             if (temp == "/*") {
                 comment = true;
                 continue;
             }
-            if (temp[0] == ' ' and temp[1] == ' '){
-                temp = temp[0];
-                continue;
-            }
-        }
-        if (flag == 2 and temp.length() == 2){
             if (search_seperator(temp)){
                 temp = "";
                 flag = 0;
