@@ -4,14 +4,130 @@
 #include <vector>
 
 using namespace std;
-const string SERVICE_WORDS[] = {"dim", "integer", "real", "boolean", "ass", "if", "then", "else", "for", "to", "do", "while", "read", "write", "or", "and", "not", "true", "false"};
-const string SEPARATORS[] = {"<>", "=", "<", "<=", ">", ">=", "+", "-", "*", "/", "{", ";", "}", ",", ":", "\n", ".", "(", ")"};
+const string SERVICE_WORDS[] = {"dim", "integer", "real", "boolean", "ass",
+                                "if", "then", "else", "for", "to", "do",
+                                "while", "read", "write", "or", "and", "not",
+                                "true", "false"};
+const string SEPARATORS[] = {"<>", "=", "<", "<=", ">", ">=", "+", "-", "*",
+                             "/", "{", ";", "}", ",", ":", "\n", ".", "(",
+                             ")"};
 const string ALPHAS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_";
 const string NUMBERS = "012345689";
 vector<string> variables = {};
 vector<int> numbers = {};
 vector<vector<unsigned long>> lexems = {};
 
+bool type(int iter){
+    if (lexems[iter][0] != 0) return false;
+    switch (lexems[iter][1]){
+    case 1: return true;
+    case 2: return true;
+    case 3: return true;
+    default: return false;
+    }
+}
+
+bool identifier(int iter){
+    if (lexems[iter][0] == 3) return true;
+    else return false;
+}
+
+int description(int iter){
+    if (!(lexems[iter][0] == 0 and lexems[iter][1] == 0)) return -1;
+    iter++;
+    if (!identifier(iter)) return -1;
+    iter++;
+    while (lexems[iter][0] == 1 and lexems[iter][1] == 13) {
+        iter++;
+        if (!identifier(iter)) return -1;
+        iter++;
+    }
+    if (type(iter)) return iter;
+    else return -1;
+}
+
+int compound(int iter){
+
+}
+
+int assignments(int iter){
+
+}
+
+int conditional_oprt(int iter){
+
+}
+
+int fixed_cycle(int iter){
+
+}
+
+int conditional_loop(int iter){
+
+}
+
+int input(int iter){
+
+}
+
+int output(int iter){
+
+}
+
+int opertr(int iter){
+    int i = compound(iter);
+    if (i != -1) return i;
+    i = assignments(iter);
+    if (i != -1) return i;
+    i = conditional_oprt(iter);
+    if (i != -1) return i;
+    i = fixed_cycle(iter);
+    if (i != -1) return i;
+    i = conditional_loop(iter);
+    if (i != -1) return i;
+    i = input(iter);
+    if (i != -1) return i;
+    i = output(iter);
+    if (i != -1) return i;
+    return -1;
+}
+
+bool program(){
+    int flag = 0;
+    for (int i = 0; i < lexems.size(); i++){
+        if (lexems[i][0] == 1 and lexems[i][1] == 10){
+            for (int j = i; j < lexems.size(); j++){
+                if (flag != 0){
+                    if (lexems[j][0] == 1 and lexems[j][1] == 11){
+                        flag = 2;
+                        continue;
+                    }
+                    else return false;
+                }
+                int iter = description(j);
+                if (iter != -1){
+                    j = iter;
+                    flag = 1;
+                    continue;
+                }
+                iter = opertr(j);
+                if (iter != -1){
+                    j = iter;
+                    flag = 1;
+                    continue;
+                }
+                if (flag == 0) return false;
+                if (lexems[j][0] == 1 and lexems[j][1] == 12){
+                    return true;
+                }
+                return false;
+            }
+            break;
+        }
+    }
+    return false;
+}
+// ============================================================================
 bool is_alpha(char symbol){
     for (int i = 0; i < ALPHAS.length(); i++){
         if(symbol == ALPHAS[i]) return true;
@@ -162,17 +278,29 @@ int main(int argc, char *argv[])
             }
         }
     }
-    cout << "===========================================================" << endl;
+    cout << "========================================================" << endl;
     cout << "SERVICE_WORDS:" << endl;
-    for (int i = 0; i < size(SERVICE_WORDS); i++) cout << i << ". " << SERVICE_WORDS[i] << endl;
+    for (int i = 0; i < size(SERVICE_WORDS); i++)
+        cout << i << ". " << SERVICE_WORDS[i] << endl;
     cout << endl << "SEPARATORS:" << endl;
-    for (int i = 0; i < size(SEPARATORS); i++) cout << i << ". " << SEPARATORS[i] << endl;
+    for (int i = 0; i < size(SEPARATORS); i++)
+        cout << i << ". " << SEPARATORS[i] << endl;
     cout << endl << "variables:" << endl;
-    for (int i = 0; i < variables.size(); i++) cout << i << ". " << variables[i] << endl;
+    for (int i = 0; i < variables.size(); i++)
+        cout << i << ". " << variables[i] << endl;
     cout << endl << "numbers:" << endl;
-    for (int i = 0; i < numbers.size(); i++) cout << i << ". " << numbers[i] << endl;
-    cout << "===========================================================" << endl;
-    for (int i = 0; i < lexems.size(); i++) cout << "(" << lexems[i][0] << ", " << lexems[i][1] << ") ";
-    cout << endl;
-    return 0;
+    for (int i = 0; i < numbers.size(); i++)
+        cout << i << ". " << numbers[i] << endl;
+    cout << "========================================================" << endl;
+    for (int i = 0; i < lexems.size(); i++)
+        cout << "(" << lexems[i][0] << ", " << lexems[i][1] << ") ";
+    cout << endl << "================================================" << endl;
+    if(program()){
+        cout << "Satisfies the syntax of the program" << endl;
+        return 1;
+    }
+    else {
+        cout << "Doesn't match program syntax" << endl;
+        return 0;
+    }
 }
