@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include "syntactical_analyzer.h"
 
 using namespace std;
 const string SERVICE_WORDS[] = {"dim", "integer", "real", "boolean", "ass",
@@ -17,126 +18,15 @@ vector<string> variables = {};
 vector<int> numbers = {};
 vector<vector<unsigned long>> lexems = {};
 
-bool type(int iter){
-    if (lexems[iter][0] != 0) return false;
-    switch (lexems[iter][1]){
-    case 1: return true;
-    case 2: return true;
-    case 3: return true;
-    default: return false;
-    }
-}
-
-bool identifier(int iter){
-    if (lexems[iter][0] == 3) return true;
-    else return false;
-}
-
-int description(int iter){
-    if (!(lexems[iter][0] == 0 and lexems[iter][1] == 0)) return -1;
-    iter++;
-    if (!identifier(iter)) return -1;
-    iter++;
-    while (lexems[iter][0] == 1 and lexems[iter][1] == 13) {
-        iter++;
-        if (!identifier(iter)) return -1;
-        iter++;
-    }
-    if (type(iter)) return iter;
-    else return -1;
-}
-
-int compound(int iter){
-
-}
-
-int assignments(int iter){
-
-}
-
-int conditional_oprt(int iter){
-
-}
-
-int fixed_cycle(int iter){
-
-}
-
-int conditional_loop(int iter){
-
-}
-
-int input(int iter){
-
-}
-
-int output(int iter){
-
-}
-
-int opertr(int iter){
-    int i = compound(iter);
-    if (i != -1) return i;
-    i = assignments(iter);
-    if (i != -1) return i;
-    i = conditional_oprt(iter);
-    if (i != -1) return i;
-    i = fixed_cycle(iter);
-    if (i != -1) return i;
-    i = conditional_loop(iter);
-    if (i != -1) return i;
-    i = input(iter);
-    if (i != -1) return i;
-    i = output(iter);
-    if (i != -1) return i;
-    return -1;
-}
-
-bool program(){
-    int flag = 0;
-    for (int i = 0; i < lexems.size(); i++){
-        if (lexems[i][0] == 1 and lexems[i][1] == 10){
-            for (int j = i; j < lexems.size(); j++){
-                if (flag != 0){
-                    if (lexems[j][0] == 1 and lexems[j][1] == 11){
-                        flag = 2;
-                        continue;
-                    }
-                    else return false;
-                }
-                int iter = description(j);
-                if (iter != -1){
-                    j = iter;
-                    flag = 1;
-                    continue;
-                }
-                iter = opertr(j);
-                if (iter != -1){
-                    j = iter;
-                    flag = 1;
-                    continue;
-                }
-                if (flag == 0) return false;
-                if (lexems[j][0] == 1 and lexems[j][1] == 12){
-                    return true;
-                }
-                return false;
-            }
-            break;
-        }
-    }
-    return false;
-}
-// ============================================================================
 bool is_alpha(char symbol){
-    for (int i = 0; i < ALPHAS.length(); i++){
+    for (unsigned long i = 0; i < ALPHAS.length(); i++){
         if(symbol == ALPHAS[i]) return true;
     }
     return false;
 }
 
 bool is_number(char symbol){
-    for (int i = 0; i < NUMBERS.length(); i++){
+    for (unsigned long i = 0; i < NUMBERS.length(); i++){
         if(symbol == NUMBERS[i]) return true;
     }
     return false;
@@ -164,7 +54,7 @@ bool add_seperator(string separator){
 bool add_number(string number){
     int num = 0;
     bool flag = false;
-    for (int i = 0; i < number.length(); i++){
+    for (unsigned long i = 0; i < number.length(); i++){
         for (int j = 0; j < 10; j++){
             if (number[i] == NUMBERS[j]){
                 num = num * 10 + j;
@@ -209,7 +99,7 @@ int main(int argc, char *argv[])
     temp = "";
     int flag = 0;  // 1 - Переменная(слово), 2 - Разделитель, 3 - число
     bool comment = false;
-    for (int i = 0; i < file_text.length(); i++){
+    for (unsigned long i = 0; i < file_text.length(); i++){
         char symbol = file_text[i];
         if (comment){
             temp = temp[1];
@@ -280,22 +170,23 @@ int main(int argc, char *argv[])
     }
     cout << "========================================================" << endl;
     cout << "SERVICE_WORDS:" << endl;
-    for (int i = 0; i < size(SERVICE_WORDS); i++)
+    for (unsigned long i = 0; i < size(SERVICE_WORDS); i++)
         cout << i << ". " << SERVICE_WORDS[i] << endl;
     cout << endl << "SEPARATORS:" << endl;
-    for (int i = 0; i < size(SEPARATORS); i++)
+    for (unsigned long i = 0; i < size(SEPARATORS); i++)
         cout << i << ". " << SEPARATORS[i] << endl;
     cout << endl << "variables:" << endl;
-    for (int i = 0; i < variables.size(); i++)
+    for (unsigned long i = 0; i < variables.size(); i++)
         cout << i << ". " << variables[i] << endl;
     cout << endl << "numbers:" << endl;
-    for (int i = 0; i < numbers.size(); i++)
+    for (unsigned long i = 0; i < numbers.size(); i++)
         cout << i << ". " << numbers[i] << endl;
     cout << "========================================================" << endl;
-    for (int i = 0; i < lexems.size(); i++)
+    for (unsigned long i = 0; i < lexems.size(); i++)
         cout << "(" << lexems[i][0] << ", " << lexems[i][1] << ") ";
-    cout << endl << "================================================" << endl;
-    if(program()){
+    cout << endl;
+    Syntactical_analyzer sa(lexems);
+    if(sa.program()){
         cout << "Satisfies the syntax of the program" << endl;
         return 1;
     }
