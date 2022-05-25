@@ -1,11 +1,21 @@
+#include <iostream>
 #include <vector>
 #include "syntactical_analyzer.h"
 
 using namespace std;
 
-Syntactical_analyzer::Syntactical_analyzer(vector<vector<unsigned long>> lxms)
+bool is_number(char symbol, string kit){
+    for (unsigned long i = 0; i < kit.length(); i++){
+        if(symbol == kit[i]) return true;
+    }
+    return false;
+}
+
+Syntactical_analyzer::Syntactical_analyzer(vector<vector<unsigned long>> lxms,
+                                           vector<string> nums)
 {
     lexems = lxms;
+    numbers = nums;
 }
 
 bool Syntactical_analyzer::type(int iter){
@@ -55,17 +65,127 @@ bool Syntactical_analyzer::unary_operation(int iter){
     else return false;
 }
 
-bool Syntactical_analyzer::integer(int iter){
-
-}
-
-bool Syntactical_analyzer::real(int iter){
-
-}
-
-bool Syntactical_analyzer::number(int iter){
-    if (integer(iter) or real(iter)) return true;
+bool Syntactical_analyzer::binary(int iter){
+    string str = numbers[lexems[iter][1]];
+    unsigned long i = 0;
+    while (is_number(str[i], "01")){
+        i++;
+    }
+    if (i != 0 and (str[i] == 'B' or str[i] == 'b') and i == str.length() - 1)
+        return true;
     else return false;
+}
+
+bool Syntactical_analyzer::octal(int iter){
+    string str = numbers[lexems[iter][1]];
+    unsigned long i = 0;
+    while (is_number(str[i], "01234567")){
+        i++;
+    }
+    if (i != 0 and (str[i] == 'O' or str[i] == 'o') and i == str.length() - 1)
+        return true;
+    else return false;
+}
+
+bool Syntactical_analyzer::decimal(int iter){
+    string str = numbers[lexems[iter][1]];
+    unsigned long i = 0;
+    while (is_number(str[i], "0123456789")){
+        i++;
+    }
+    if (i != 0){
+        if ((str[i] == 'D' or str[i] == 'd') and i == str.length() - 1)
+            return true;
+        else if (i == str.length()) return true;
+        else return false;
+    }
+    else return false;
+}
+
+bool Syntactical_analyzer::hexadecimal(int iter){
+    string str = numbers[lexems[iter][1]];
+    if (!is_number(str[0], "0123456789")) return false;
+    unsigned long i = 1;
+    while (is_number(str[i], "0123456789ABCDEFabcdef")){
+        i++;
+    }
+    if ((str[i] == 'H' or str[i] == 'h') and i == str.length() - 1)
+        return true;
+    else return false;
+}
+
+bool Syntactical_analyzer::integer(int iter){
+    if (lexems[iter][0] != 2) return false;
+    if (binary(iter) or octal(iter) or decimal(iter) or hexadecimal(iter))
+        return true;
+    else return false;
+}
+
+int Syntactical_analyzer::order(int iter){
+    if (lexems[iter][0] == 1 and
+            (lexems[iter][1] == 6 or lexems[iter][1] == 7)){
+        iter++;
+        if (lexems[iter][0] == 2){
+            string str = numbers[lexems[iter][1]];
+            unsigned long i = 0;
+            while (is_number(str[i], "0123456789")){
+                i++;
+            }
+            if (i != 0 and i == str.length()) return iter;
+            else return -1;
+        }
+        else return -1;
+    }
+    else return -1;
+}
+
+int Syntactical_analyzer::dot(int iter){
+    iter++;
+    if (lexems[iter][0] == 2){
+        string str = numbers[lexems[iter][1]];
+        unsigned long i = 0;
+        while (is_number(str[i], "0123456789")){
+            i++;
+        }
+        if (i != 0 and (str[i] == 'E' or str[i] == 'e') and
+                i == str.length() - 1){
+            iter++;
+            return order(iter);
+        }
+        else return iter;
+    }
+    else return -1;
+}
+
+int Syntactical_analyzer::real(int iter){
+    if (lexems[iter][0] == 2){
+        string str = numbers[lexems[iter][1]];
+        unsigned long i = 0;
+        while (is_number(str[i], "0123456789")){
+            i++;
+        }
+        if (i != 0){
+            if ((str[i] == 'E' or str[i] == 'e') and i == str.length() - 1){
+                iter++;
+                return order(iter);
+            }
+            else if (lexems[iter + 1][0] == 1 and lexems[iter + 1][1] == 16 and
+                     i == str.length()){
+                iter++;
+                return dot(iter);
+            }
+        }
+        return -1;
+    }
+    else if (lexems[iter][0] == 1 and lexems[iter][1] == 16) return dot(iter);
+    else return -1;
+}
+
+int Syntactical_analyzer::number(int iter){
+    if (integer(iter)) return iter;
+    int i = real(iter);
+    if (i != -1) return i;
+    else return -1;
 }
 
 bool Syntactical_analyzer::boolean_constant(int iter){
@@ -260,9 +380,7 @@ int Syntactical_analyzer::output(int iter){
 }
 
 int Syntactical_analyzer::opertr(int iter){
-    int i = compound(iter);
-    if (i != -1) return i;
-    i = assignments(iter);
+    int i = assignments(iter);
     if (i != -1) return i;
     i = conditional_oprt(iter);
     if (i != -1) return i;
@@ -274,6 +392,8 @@ int Syntactical_analyzer::opertr(int iter){
     if (i != -1) return i;
     i = output(iter);
     if (i != -1) return i;
+    i = compound(iter);
+    if (i != -1) return i;
     return -1;
 }
 
@@ -281,14 +401,16 @@ bool Syntactical_analyzer::program(){
     int flag = 0;
     for (unsigned long i = 0; i < lexems.size(); i++){
         if (lexems[i][0] == 1 and lexems[i][1] == 10){
-            for (unsigned long j = i; j < lexems.size(); j++){
-                if (flag != 0){
+            for (unsigned long j = i + 1; j < lexems.size(); j++){
+                if (flag == 1){
                     if (lexems[j][0] == 1 and lexems[j][1] == 11){
                         flag = 2;
                         continue;
                     }
                     else return false;
                 }
+                if (lexems[j][0] == 1 and lexems[j][1] == 15) continue;
+                if (lexems[j][0] == 1 and lexems[j][1] == 12 and flag != 0) return true;
                 int iter = description(j);
                 if (iter != -1){
                     j = iter;
@@ -300,10 +422,6 @@ bool Syntactical_analyzer::program(){
                     j = iter;
                     flag = 1;
                     continue;
-                }
-                if (flag == 0) return false;
-                if (lexems[j][0] == 1 and lexems[j][1] == 12){
-                    return true;
                 }
                 return false;
             }

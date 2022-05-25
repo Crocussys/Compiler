@@ -15,7 +15,7 @@ const string SEPARATORS[] = {"<>", "=", "<", "<=", ">", ">=", "+", "-", "*",
 const string ALPHAS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_";
 const string NUMBERS = "012345689";
 vector<string> variables = {};
-vector<int> numbers = {};
+vector<string> numbers = {};
 vector<vector<unsigned long>> lexems = {};
 
 bool is_alpha(char symbol){
@@ -35,7 +35,7 @@ bool is_number(char symbol){
 bool search_seperator(string separator){
     for (unsigned long i = 0; i < size(SEPARATORS); i++){
         if (separator == SEPARATORS[i]){
-            cout << "1." << i << " " << separator << endl;
+            //cout << "1." << i << " " << separator << endl;
             lexems.push_back({1, i});
             return true;
         }
@@ -52,28 +52,14 @@ bool add_seperator(string separator){
 }
 
 bool add_number(string number){
-    int num = 0;
-    bool flag = false;
-    for (unsigned long i = 0; i < number.length(); i++){
-        for (int j = 0; j < 10; j++){
-            if (number[i] == NUMBERS[j]){
-                num = num * 10 + j;
-                flag = true;
-            }
-        }
-        if (!flag) {
-            cout << "ERROR!" << endl;   // Error
-            return false;
-        }
-    }
-    cout << "2 " << num << endl;
-    numbers.push_back(num);
+    //cout << "2 " << number << endl;
+    numbers.push_back(number);
     lexems.push_back({2, numbers.size() - 1});
     return true;
 }
 
 void add_variable(string variable){
-    cout << "3 " << variable << endl;
+    //cout << "3 " << variable << endl;
     variables.push_back(variable);
     lexems.push_back({3, variables.size() - 1});
 }
@@ -119,13 +105,13 @@ int main(int argc, char *argv[])
             flag = 0;
             continue;
         }
-        if (is_alpha(symbol) or (is_number(symbol) and flag == 1)){
+        if ((is_alpha(symbol) and flag != 3) or (is_number(symbol) and flag == 1)){
             if (flag == 2) add_seperator(temp);
             else if (flag == 3) add_number(temp);
             if (flag != 1) temp = "";
             flag = 1;
         }
-        else if (is_number(symbol)){
+        else if (is_number(symbol) or (is_alpha(symbol) and flag == 3)){
             if (flag == 2) add_seperator(temp);
             else if (flag == 1) add_variable(temp);
             if (flag != 3) temp = "";
@@ -141,7 +127,7 @@ int main(int argc, char *argv[])
         if (flag == 1 and temp.length() < 8){
             for (unsigned long i = 0; i < size(SERVICE_WORDS); i++){
                 if (temp == SERVICE_WORDS[i]){
-                    cout << "0." << i << " " << temp << endl;
+                    //cout << "0." << i << " " << temp << endl;
                     lexems.push_back({0, i});
                     temp = "";
                     flag = 0;
@@ -168,7 +154,7 @@ int main(int argc, char *argv[])
             }
         }
     }
-    cout << "========================================================" << endl;
+    //cout << "========================================================" << endl;
     cout << "SERVICE_WORDS:" << endl;
     for (unsigned long i = 0; i < size(SERVICE_WORDS); i++)
         cout << i << ". " << SERVICE_WORDS[i] << endl;
@@ -185,13 +171,14 @@ int main(int argc, char *argv[])
     for (unsigned long i = 0; i < lexems.size(); i++)
         cout << "(" << lexems[i][0] << ", " << lexems[i][1] << ") ";
     cout << endl;
-    Syntactical_analyzer sa(lexems);
+    cout << "========================================================" << endl;
+    Syntactical_analyzer sa(lexems, numbers);
     if(sa.program()){
-        cout << "Satisfies the syntax of the program" << endl;
+        cout << "Satisfies the syntax of the program" << endl << endl;
         return 1;
     }
     else {
-        cout << "Doesn't match program syntax" << endl;
+        cout << "Doesn't match program syntax" << endl << endl;
         return 0;
     }
 }
