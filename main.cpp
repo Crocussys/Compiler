@@ -5,11 +5,11 @@
 #include "syntactical_analyzer.h"
 
 using namespace std;
-const string SERVICE_WORDS[] = {"dim", "integer", "real", "boolean", "ass",
+const string SERVICE_WORDS[19] = {"dim", "integer", "real", "boolean", "ass",
                                 "if", "then", "else", "for", "to", "do",
                                 "while", "read", "write", "or", "and", "not",
                                 "true", "false"};
-const string SEPARATORS[] = {"<>", "=", "<", "<=", ">", ">=", "+", "-", "*",
+const string SEPARATORS[19] = {"<>", "=", "<", "<=", ">", ">=", "+", "-", "*",
                              "/", "{", ";", "}", ",", ":", "\n", ".", "(",
                              ")"};
 const string ALPHAS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_";
@@ -33,7 +33,7 @@ bool is_number(char symbol){
 }
 
 bool search_seperator(string separator){
-    for (unsigned long i = 0; i < size(SEPARATORS); i++){
+    for (unsigned long i = 0; i < 19; i++){
         if (separator == SEPARATORS[i]){
             //cout << "1." << i << " " << separator << endl;
             lexems.push_back({1, i});
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
         }
         temp += symbol;
         if (flag == 1 and temp.length() < 8){
-            for (unsigned long i = 0; i < size(SERVICE_WORDS); i++){
+            for (unsigned long i = 0; i < 19; i++){
                 if (temp == SERVICE_WORDS[i]){
                     //cout << "0." << i << " " << temp << endl;
                     lexems.push_back({0, i});
@@ -156,10 +156,10 @@ int main(int argc, char *argv[])
     }
     //cout << "========================================================" << endl;
     cout << "SERVICE_WORDS:" << endl;
-    for (unsigned long i = 0; i < size(SERVICE_WORDS); i++)
+    for (unsigned long i = 0; i < 19; i++)
         cout << i << ". " << SERVICE_WORDS[i] << endl;
     cout << endl << "SEPARATORS:" << endl;
-    for (unsigned long i = 0; i < size(SEPARATORS); i++)
+    for (unsigned long i = 0; i < 19; i++)
         cout << i << ". " << SEPARATORS[i] << endl;
     cout << endl << "variables:" << endl;
     for (unsigned long i = 0; i < variables.size(); i++)
